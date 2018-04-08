@@ -1,0 +1,8 @@
+Q. How to create a repository and push code into that in GITHUB?
+	
+	
+	1.Go to GITHUB link(https://github.com)
+	2.Go to the right side top and click on the '+' plus sign to create a new repository
+	3. Click on new repository and name it and give details accordingly and then click on create repository
+	4.copy the link   which is under this line "Quick setup — if you’ve done this kind of thing before" ex "https://github.com/rgittest/MYTEST_rpo.git"
+	

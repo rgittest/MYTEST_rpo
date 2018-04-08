@@ -1,0 +1,295 @@
+13/mar/2018
+
+1.Code walkthrough-not yet started
+2.Permissions required(DB,GITHUB)->Done
+3.GitHub walkthrough??? started
+4.DAM ppt->almost done
+
+Bank formalities too->Done
+ICICI Bal****:Done
+
+
+
+
+
+
+
+
+14/MAr/2018
+1.Github -inprogress
+2.Doc Proxy code through - in progress
+3.VS setup -Done
+
+15/mar/2018
+1.DAM training Videos
+2.KAZAAM tools
+3.DAM API.
+4.
+
+
+
+BESCOMM : 7185355000
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+facttable
+cube groupby ..??
+
+
+
+
+
+Tables Involved
+
+Groups
+WorkQueue
+WorkQueueTasks
+Documents
+
+
+.
+
+
+
+Getting an Id from Groups, AGroup
+BGroup
+
+
+go to FFMDE Proc
+and 
+meta*Proc
+find any sinle Entry 
+
+
+
+******************************************************************sample Solution **************************************************
+  select isnull(f.DisplayName,'GrandTotal') as Feed,sum(case when w.AssignedGroupId=263 then 1 else 0 end) as GroupA,sum(case when w.AssignedGroupId=264 then 1 else 0 end) as GroupB,sum(case when w.AssignedGroupId=15158 then 1 else 0 end)  as SingleEntry,/* add Singlr Entry  Column */COUNT(d.id) as GrandTotal
+from documents d (nolock)
+join WorkQueue w (nolock) on d.id=w.documentid
+join workqueuetasks wt (nolock) on wt.id=w.taskid
+join feeds f (nolock) on f.id=d.FeedId
+where wt.Name='MultiMeta' and w.assignedgroupid in (263,264,15158) and w.WaitCount=0
+group by cube(f.DisplayName);
+
+***************************************************************************************************************
+
+
+
+
+
+select isnull(wt.DisplayName,'GrandTotal') as Task,count(d.id) as Total,sum(case when w.WqPath='SEMM' then 1 else 0 end) as SingleEntryMeta from workqueue w (nolock)
+join workqueuetasks wt (nolock) on wt.id=w.taskid
+join documents d (nolock) on d.id=w.documentid
+join WorkQueuePaths wqp (nolock) on wqp.id=w.WqPath
+where  wt.Name in ('MultiMeta','HLangId','DupeQA','MetadataQA','SdrMdaMrge','Resolution','FFResolutinoVerification','PageRotate') and w.WaitCount=0  --**********include Single Entry Enhancement row with 
+
+group by cube(wt.DisplayName)
+
+
+*******************************************************************************************************************
+
+
+
+select isnull(wt.DisplayName,'GrandTotal') as Task,count(d.id) as Total,sum(case when w.WqPath='SEMM' then 1 else 0 end) as SingleEntryMeta ,sum(case when w.WqPath='METAE' then 1 else 0 end) as MultipleEntry from workqueue w (nolock)
+join workqueuetasks wt (nolock) on wt.id=w.taskid
+join documents d (nolock) on d.id=w.documentid
+join WorkQueuePaths wqp (nolock) on wqp.id=w.WqPath
+where   wt.Name in (CASE WHEN w.WqPath='SEMM'AND wt.Name='MultiMeta' THEN 'MultiMeta' else 'none' END,'HLangId','DupeQA','MetadataQA','SdrMdaMrge','Resolution','FFResolutinoVerification','PageRotate') and w.WaitCount=0  --**********include Single Entry Enhancement row with 
+
+group by cube(wt.DisplayName)
+
+*****************************************************************************************************
+
+
+
+
+select isnull(wt.DisplayName,'GrandTotal') as Task,count(d.id) as Total,sum(case when w.WqPath='SEMM' then 1 else 0 end) as SingleEntryMeta ,sum(case when w.WqPath='METAE' then 1 else 0 end) as MultipleEntry from workqueue w (nolock)
+join workqueuetasks wt (nolock) on wt.id=w.taskid
+join documents d (nolock) on d.id=w.documentid
+join WorkQueuePaths wqp (nolock) on wqp.id=w.WqPath
+where   wt.Name in (CASE WHEN w.WqPath='SEMM'AND wt.Name='MultiMeta' THEN 'MultiMeta' else 'none' END,'HLangId','DupeQA','MetadataQA','SdrMdaMrge','Resolution','FFResolutinoVerification','PageRotate') and w.WaitCount=0  --**********include Single Entry Enhancement row with 
+
+group by cube(wt.DisplayName)
+
+
+
+
+*******************************************************wrong path
+
+select isnull(CASE WHEN wt.Name='MultiMeta' and w.WqPath='SEMM' THEN 'Single' else 'none' END,'GrandTotal') as Task, count(d.id) as Total
+from workqueue w (nolock)
+join workqueuetasks wt (nolock) on wt.id=w.taskid
+join documents d (nolock) on d.id=w.documentid
+join WorkQueuePaths wqp (nolock) on wqp.id=w.WqPath
+where   wt.Name in (CASE WHEN w.WqPath='SEMM'AND wt.Name='MultiMeta' THEN 'MultiMeta' else 'none' END,CASE WHEN w.WqPath='METAE'AND wt.Name='MultiMeta' THEN 'MultiMeta' else 'none' END,'HLangId','DupeQA','MetadataQA','SdrMdaMrge','Resolution','FFResolutinoVerification','PageRotate') and w.WaitCount=0  --**********include Single Entry Enhancement row with 
+
+group by cube(wt.Name)
+
+
+
+
+*******************************************Solution
+
+WITH CTEEXP
+AS
+(
+select isnull(wqp.DisplayName ,'GrandTotal') as Task, count(d.id) as Total
+from workqueue w (nolock)
+join workqueuetasks wt (nolock) on wt.id=w.taskid
+join documents d (nolock) on d.id=w.documentid
+join WorkQueuePaths wqp (nolock) on wqp.id=w.WqPath
+where   wt.Name='MultiMeta' and w.WaitCount=0
+group by cube(wqp.DisplayName) 
+
+UNION
+
+select isnull(wt.DisplayName,'GrandTotal') as Task,count(d.id) as Total from workqueue w (nolock)
+join workqueuetasks wt (nolock) on wt.id=w.taskid
+join documents d (nolock) on d.id=w.documentid
+where wt.Name in ('HLangId','DupeQA','MetadataQA','SdrMdaMrge','Resolution','FFResolutinoVerification','PageRotate') and w.WaitCount=0 
+group by cube(wt.DisplayName)  
+
+)
+
+
+
+select Task, sum(Total) as Total
+from CTEEXP
+group by Task
+
+
+**********************************************************solutions 1
+
+WITH cteTotal
+AS
+(
+select wqp.DisplayName as Task, count(d.id) as Total
+from workqueue w (nolock)
+join workqueuetasks wt (nolock) on wt.id=w.taskid
+join documents d (nolock) on d.id=w.documentid
+join WorkQueuePaths wqp (nolock) on wqp.id=w.WqPath
+where   wt.Name='MultiMeta' and w.WaitCount=0
+group by cube(wqp.DisplayName) 
+
+UNION
+
+select wt.DisplayName as Task,count(d.id) as Total from workqueue w (nolock)
+join workqueuetasks wt (nolock) on wt.id=w.taskid
+join documents d (nolock) on d.id=w.documentid
+where wt.Name in ('HLangId','DupeQA','MetadataQA','SdrMdaMrge','Resolution','FFResolutinoVerification','PageRotate') and w.WaitCount=0 
+group by cube(wt.DisplayName)  
+
+)
+
+select isnull(Task,'GrandTotal')as Tasks, sum(Total) as Total
+from cteTotal
+group by Task Order by Task DESC
+
+
+
+*********************************renamed for SEMM and METAE
+
+WITH cteTotal
+	AS
+	(
+	select CASE WHEN wqp.DisplayName='SEMM' THEN 'Single Entry Meta'  when wqp.DisplayName='METAE' THEN 'Multi Entry Meta' end as Task, count(d.id) as Total
+	from workqueue w (nolock)
+	join workqueuetasks wt (nolock) on wt.id=w.taskid
+	join documents d (nolock) on d.id=w.documentid
+	join WorkQueuePaths wqp (nolock) on wqp.id=w.WqPath
+	where   wt.Name='MultiMeta' and w.WaitCount=0
+	group by cube(wqp.DisplayName) 
+
+	UNION
+
+	select wt.DisplayName as Task,count(d.id) as Total
+	from workqueue w (nolock)
+	join workqueuetasks wt (nolock) on wt.id=w.taskid
+	join documents d (nolock) on d.id=w.documentid
+	where wt.Name in ('HLangId','DupeQA','MetadataQA','SdrMdaMrge','Resolution','FFResolutinoVerification','PageRotate') and w.WaitCount=0 
+	group by cube(wt.DisplayName)  
+
+)
+
+select isnull(Task,'GrandTotal')as Tasks, sum(Total) as Total
+from cteTotal
+group by Task Order by Task DESC
+
+
+
+
+
+
+
+
+singleentryimplementation in Prod?
+Multimeta task must be inserted two times in workqueue
+singleentry must be inserted only once in workQueue.
+how single entry implemented??what are procs are involved
+
+
+check whether if doc goes for one user or two users in workqueue.
+
+
+doc-g1
+doc g2
+
+
+*********************************** Learn "sql execution plan" and enhance the s proc if posssible.
+
+1.Get a History of the given document
+--The following is the sample document id refer the single entry 
+select * from WorkQueueHistory (nolock) h where h.DocumentID='A908BDDE-672E-E811-80F1-8CDCD4AF21E4'
+2.you can check the different paths that document has gone through
+
+3.single entry metadata enhancement is the path(SEMM which is recides in the FFMDEsegment)
+FYR
+
+select * from WorkQueueHistory (nolock) h where h.DocumentID='A908BDDE-672E-E811-80F1-8CDCD4AF21E4'
+
+select * from WorkQueueSegments where id=7
+
+select * from WorkQueuePaths where id ='SEMM'
+
+
+what is waitcount ??
+why we use for??
+
+
+
+Lioncompany exit proc
+METAE 
+Realy fast fundametal value ->it don not t stop anywhere 
+
+what is the cost by adding the column.
+FFMDE->
+LionCompany task queue avuthunthin
+lion company task exit  proc 
+METAe ki vellindi
+akkada 
+RFF value basis 
+
+what does multimeta task??
+
+
+
+
+
+
+
+ You can submit commands from within Windows script files (such as .bat), via sp_cmdshell,????
+  through SQL Server Agent CmdExec jobs???
+  
